@@ -24,15 +24,15 @@ public class CouponService {
 
     public CouponResponse create(CouponDTO request) {
 
-        // --- Regra: sanitizar code (remover caracteres especiais) ---
+        // sanitizar code (remover caracteres especiais) ---
         String sanitizedCode = sanitizeCode(request.getCode());
 
-        // --- Regra: valor mínimo 0.5 ---
+        // valor mínimo 0.5 ---
         if (request.getDiscountValue() == null || request.getDiscountValue() < 0.5) {
             throw new BusinessException("discountValue must be at least 0.5");
         }
 
-        // --- Regra: expirationDate não pode ser no passado ---
+        // expirationDate não pode ser no passado ---
         if (request.getExpirationDate() == null ||
                 request.getExpirationDate().isBefore(LocalDateTime.now())) {
             throw new BusinessException("expirationDate cannot be in the past");
@@ -87,13 +87,12 @@ public class CouponService {
         // remove tudo que não for [A-Za-z0-9]
         String sanitized = rawCode.replaceAll("[^A-Za-z0-9]", "");
 
-        // garantir tamanho 6
+
         if (sanitized.length() > 6) {
             sanitized = sanitized.substring(0, 6);
         }
 
         if (sanitized.length() < 6) {
-            // regra não é explícita, mas faz sentido falhar
             throw new BusinessException("code must have 6 alphanumeric characters after sanitization");
         }
 
