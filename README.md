@@ -99,7 +99,7 @@ src/main/java/com.example.demo
 - **Regras de negócio:**
   - Retorna erro se o cupom não existir.
   - Realiza soft delete, marcando o cupom como deletado sem removê-lo do banco.
-  - Após deletado, o cupom não deve ser retornado em consultas futuras.
+  - Após deletado, o cupom deve ser retornado em consultas futuras.
 ---
 
 ## Regras de Negócio Gerais
