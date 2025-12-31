@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.CouponDTO;
 import com.example.demo.dto.CouponResponse;
 import com.example.demo.entities.CouponEntity;
+import com.example.demo.enums.CouponStatusEnum;
 import com.example.demo.exceptions.BusinessException;
 import com.example.demo.exceptions.CouponAlreadyDeletedException;
 import com.example.demo.exceptions.CouponNotFoundException;
@@ -15,7 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,39 +43,129 @@ class CouponServiceTest {
         couponDTO.setCode("ABC123!!");
         couponDTO.setDescription("Cupom de teste");
         couponDTO.setDiscountValue(10.0);
-        couponDTO.setExpirationDate(LocalDateTime.now().plusDays(1));
-        couponDTO.setPublished(true);
+        couponDTO.setExpirationDate(Instant.now().plus(1, ChronoUnit.DAYS));
+        couponDTO.setPublished(false);
     }
 
     @Test
     void shouldCreateCouponWhenDataIsValid() {
-        // arrange
         CouponEntity saved = new CouponEntity();
         saved.setId(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
-        saved.setCode("ABC123"); // esperado após sanitize
+        saved.setCode("ABC123");
         saved.setDescription(couponDTO.getDescription());
         saved.setDiscountValue(couponDTO.getDiscountValue());
         saved.setExpirationDate(couponDTO.getExpirationDate());
-        saved.setPublished(true);
+        saved.setStatus(CouponStatusEnum.ACTIVE);
+        saved.setPublished(false);
+        saved.setRedeemed(false);
 
         when(couponRepository.save(any(CouponEntity.class))).thenReturn(saved);
 
-        // act
+
         CouponResponse response = couponService.create(couponDTO);
 
-        // assert
         assertThat(response.getId()).isEqualTo(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
-        assertThat(response.getCode()).isEqualTo("ABC123"); // sanitizado
+        assertThat(response.getCode()).isEqualTo("ABC123");
         assertThat(response.getDescription()).isEqualTo(couponDTO.getDescription());
         assertThat(response.getDiscountValue()).isEqualTo(couponDTO.getDiscountValue());
         assertThat(response.getExpirationDate()).isEqualTo(couponDTO.getExpirationDate());
-        assertThat(response.getPublished()).isTrue();
+        assertThat(response.getPublished()).isFalse();
+        assertThat(response.getStatus()).isEqualTo(CouponStatusEnum.ACTIVE);
+        assertThat(response.getRedeemed()).isFalse();
 
-        // garante que o objeto salvo também foi sanitizado
+
         ArgumentCaptor<CouponEntity> captor = ArgumentCaptor.forClass(CouponEntity.class);
         verify(couponRepository).save(captor.capture());
         assertThat(captor.getValue().getCode()).isEqualTo("ABC123");
     }
+
+    @Test
+    void shouldCreateCouponAsPublishedWhenPublishedIsTrue() {
+        couponDTO.setPublished(true);
+
+        CouponEntity saved = new CouponEntity();
+        saved.setId(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
+        saved.setCode("ABC123");
+        saved.setDescription(couponDTO.getDescription());
+        saved.setDiscountValue(couponDTO.getDiscountValue());
+        saved.setExpirationDate(couponDTO.getExpirationDate());
+        saved.setStatus(CouponStatusEnum.ACTIVE);
+        saved.setPublished(true);
+        saved.setRedeemed(false);
+
+        when(couponRepository.save(any(CouponEntity.class))).thenReturn(saved);
+
+
+        CouponResponse response = couponService.create(couponDTO);
+
+
+        assertThat(response.getPublished()).isTrue();
+
+
+        ArgumentCaptor<CouponEntity> captor = ArgumentCaptor.forClass(CouponEntity.class);
+        verify(couponRepository).save(captor.capture());
+        assertThat(captor.getValue().getPublished()).isTrue();
+    }
+
+
+    @Test
+    void shouldTruncateCodeToSixCharactersWhenSanitizedIsLongerThanSix() {
+
+        couponDTO.setCode("ABC-123-XYZ");
+
+        CouponEntity saved = new CouponEntity();
+        saved.setId(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
+        saved.setCode("ABC123");
+        saved.setDescription(couponDTO.getDescription());
+        saved.setDiscountValue(couponDTO.getDiscountValue());
+        saved.setExpirationDate(couponDTO.getExpirationDate());
+        saved.setStatus(CouponStatusEnum.ACTIVE);
+        saved.setPublished(false);
+        saved.setRedeemed(false);
+
+        when(couponRepository.save(any(CouponEntity.class))).thenReturn(saved);
+
+
+        CouponResponse response = couponService.create(couponDTO);
+
+
+        assertThat(response.getCode()).isEqualTo("ABC123");
+
+
+        ArgumentCaptor<CouponEntity> captor = ArgumentCaptor.forClass(CouponEntity.class);
+        verify(couponRepository).save(captor.capture());
+        assertThat(captor.getValue().getCode()).isEqualTo("ABC123");
+    }
+
+
+    @Test
+    void shouldDefaultPublishedToFalseWhenPublishedIsNull() {
+
+        couponDTO.setPublished(null);
+
+        CouponEntity saved = new CouponEntity();
+        saved.setId(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
+        saved.setCode("ABC123");
+        saved.setDescription(couponDTO.getDescription());
+        saved.setDiscountValue(couponDTO.getDiscountValue());
+        saved.setExpirationDate(couponDTO.getExpirationDate());
+        saved.setStatus(CouponStatusEnum.ACTIVE);
+        saved.setPublished(false);
+        saved.setRedeemed(false);
+
+        when(couponRepository.save(any(CouponEntity.class))).thenReturn(saved);
+
+
+        CouponResponse response = couponService.create(couponDTO);
+
+
+        assertThat(response.getPublished()).isFalse();
+
+        ArgumentCaptor<CouponEntity> captor = ArgumentCaptor.forClass(CouponEntity.class);
+        verify(couponRepository).save(captor.capture());
+        assertThat(captor.getValue().getPublished()).isFalse();
+    }
+
 
     @Test
     void shouldFailWhenDiscountValueIsLessThanMin() {
@@ -81,14 +173,14 @@ class CouponServiceTest {
 
         assertThatThrownBy(() -> couponService.create(couponDTO))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("discount"); // ajuste a msg se quiser mais específico
+                .hasMessageContaining("discount");
 
         verifyNoInteractions(couponRepository);
     }
 
     @Test
     void shouldFailWhenExpirationDateIsInThePast() {
-        couponDTO.setExpirationDate(LocalDateTime.now().minusDays(1));
+        couponDTO.setExpirationDate(Instant.now().minus(1, ChronoUnit.DAYS));
 
         assertThatThrownBy(() -> couponService.create(couponDTO))
                 .isInstanceOf(BusinessException.class)
@@ -99,7 +191,7 @@ class CouponServiceTest {
 
     @Test
     void shouldFailWhenCodeAfterSanitizeHasLessThanSixCharacters() {
-        couponDTO.setCode("A!1"); // vai virar "A1"
+        couponDTO.setCode("A!1");
 
         assertThatThrownBy(() -> couponService.create(couponDTO))
                 .isInstanceOf(BusinessException.class)
@@ -113,15 +205,15 @@ class CouponServiceTest {
         CouponEntity coupon = new CouponEntity();
         coupon.setId(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
         coupon.setCode("ABC123");
-        coupon.setDeleted(null);
+        coupon.setStatus(CouponStatusEnum.ACTIVE);
 
         when(couponRepository.findById(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"))).thenReturn(Optional.of(coupon));
 
-        // act
+
         couponService.delete(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
 
-        // assert
-        assertThat(coupon.getDeleted()).isNotNull();
+
+        assertThat(coupon.getStatus()).isEqualTo(CouponStatusEnum.DELETED);
         verify(couponRepository).save(coupon);
     }
 
@@ -141,7 +233,7 @@ class CouponServiceTest {
         CouponEntity coupon = new CouponEntity();
         coupon.setId(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"));
         coupon.setCode("ABC123");
-        coupon.setDeleted(true);
+        coupon.setStatus(CouponStatusEnum.DELETED);
 
         when(couponRepository.findById(UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50"))).thenReturn(Optional.of(coupon));
 

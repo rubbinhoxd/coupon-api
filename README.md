@@ -1,6 +1,6 @@
 #  Coupon API – Desafio Técnico
 
-API REST para gestão de cupons promocionais, desenvolvida para atender ao desafio técnico JAVA TENDA.  
+API REST para gestão de cupons promocionais, desenvolvida para atender ao desafio técnico TENDA.  
 O projeto foi construído com **Java 17 + Spring Boot 3**, utilizando banco em memória **H2** e cobrindo regras de negócio através de testes automatizados.
 
 ---
@@ -26,6 +26,7 @@ src/main/java/com.example.demo
 ├── controller → Camada HTTP (endpoints)
 ├── service → Regras de negócio
 ├── entity → Modelo de dados (JPA)
+├── enum → Enum representando STATUS (ACTIVE, INACTIVE e DELETED)
 ├── repository → Persistência (Spring Data JPA)
 ├── dto → Objetos de entrada/saída
 └── exceptions → Exceções e handlers globais
@@ -46,7 +47,7 @@ src/main/java/com.example.demo
   "code": "ABC123!!",
   "description": "Cupom de teste",
   "discountValue": 10.0,
-  "expirationDate": "2025-10-01T12:00:00.000",
+  "expirationDate": "2025-11-04T17:14:45.180Z",
   "published": false
 }
   ```
@@ -57,16 +58,17 @@ src/main/java/com.example.demo
   "code": "ABC123",
   "description": "Cupom de teste",
   "discountValue": 10.0,
-  "expirationDate": "2025-10-01T12:00:00.000",
+  "expirationDate": "2025-11-04T17:36:46.577Z",
+  "status": "ACTIVE",
   "published": false,
   "redeemed": false
 }
 ```
 - **Códigos de resposta:** `201 Created`, `400 Bad Request`
 - **Regras de negócio:**
-  - O código do cupom deve ser estável (sem considerar caracteres especiais).
+  - O código do cupom deve possuir exatamente 6 caracteres alfanuméricos, após a remoção de caracteres especiais.
   - A data de expiração deve ser futura.
-  - O valor do desconto deve ser positivo.
+  - O valor do desconto deve ser maior ou igual a 0.5.
 
 ## Listar cupom
 - **URL:** `/coupon/d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50`
@@ -80,7 +82,8 @@ src/main/java/com.example.demo
   "code": "ABC123",
   "description": "Cupom de teste",
   "discountValue": 10.0,
-  "expirationDate": "2025-10-01T12:00:00.000",
+  "expirationDate": "2025-11-04T17:36:46.577Z",
+  "status": "ACTIVE",
   "published": false,
   "redeemed": false
 }
@@ -98,8 +101,9 @@ src/main/java/com.example.demo
 - **Códigos de resposta:** `204 No Content`, `404 Not Found`, `409 Conflict`
 - **Regras de negócio:**
   - Retorna erro se o cupom não existir.
-  - Realiza soft delete, marcando o cupom como deletado sem removê-lo do banco.
-  - Após deletado, o cupom deve ser retornado em consultas futuras.
+  - O soft delete é realizado através do campo `status`.
+  - Quando deletado, o status do cupom é alterado para `DELETED`.
+  - Cupons com status `DELETED` não são retornados em consultas.
 ---
 
 ## Regras de Negócio Gerais
@@ -120,9 +124,9 @@ src/main/java/com.example.demo
 
 ### ✔ Validação da data de expiração
 - Não pode estar no passado
-- Validada com a anotação: `@FutureOrPresent`
-- `LocalDateTime` como tipo de expiração
-- Formato esperado: `yyyy-MM-dd'T'HH:mm:ss.SSS`
+- Tipo utilizado: `Instant`
+- Formato esperado (ISO 8601):
+  `yyyy-MM-dd'T'HH:mm:ss.SSSX`
 ---
 
 ###  Sanitização do código (`code`)

@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.CouponDTO;
 import com.example.demo.dto.CouponResponse;
+import com.example.demo.enums.CouponStatusEnum;
 import com.example.demo.exceptions.CouponAlreadyDeletedException;
 import com.example.demo.exceptions.CouponNotFoundException;
 import com.example.demo.service.CouponService;
@@ -14,7 +15,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 
@@ -46,8 +48,8 @@ class CouponControllerTest {
         request.setCode("ABC123!!");
         request.setDescription("Cupom de teste");
         request.setDiscountValue(10.0);
-        request.setExpirationDate(LocalDateTime.now().plusDays(1));
-        request.setPublished(true);
+        request.setExpirationDate(Instant.now().plus(1, ChronoUnit.DAYS));
+        request.setPublished(false);
 
         UUID id = UUID.fromString("d11fa7b2-714d-43a1-bc76-1ec8b8b1ba50");
 
@@ -57,7 +59,9 @@ class CouponControllerTest {
         response.setDescription(request.getDescription());
         response.setDiscountValue(request.getDiscountValue());
         response.setExpirationDate(request.getExpirationDate());
-        response.setPublished(true);
+        response.setPublished(false);
+        response.setStatus(CouponStatusEnum.ACTIVE);
+        response.setRedeemed(false);
 
         when(couponService.create(any(CouponDTO.class))).thenReturn(response);
 
@@ -67,23 +71,24 @@ class CouponControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", is(id.toString())))
                 .andExpect(jsonPath("$.code", is("ABC123")))
-                .andExpect(jsonPath("$.description", is("Cupom de teste")));
+                .andExpect(jsonPath("$.description", is("Cupom de teste")))
+                .andExpect(jsonPath("$.status", is("ACTIVE")))
+                .andExpect(jsonPath("$.redeemed", is(false)));
     }
 
     @Test
     void shouldReturn400WhenValidationFails() throws Exception {
         CouponDTO request = new CouponDTO();
         request.setCode("ABC123");
-        request.setDescription(""); // inválido
+        request.setDescription("");
         request.setDiscountValue((0.4));
-        request.setExpirationDate(LocalDateTime.now().plusDays(1));
+        request.setExpirationDate(Instant.now().plus(1, ChronoUnit.DAYS));
 
         mockMvc.perform(post("/coupon")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
-        // Se você tem um handler que retorna estrutura customizada,
-        // pode adicionar mais asserts de jsonPath aqui.
+
     }
 
     @Test

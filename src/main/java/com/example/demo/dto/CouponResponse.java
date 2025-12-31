@@ -1,5 +1,8 @@
 package com.example.demo.dto;
 
+import com.example.demo.enums.CouponStatusEnum;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -9,19 +12,21 @@ public class CouponResponse {
     private String code;
     private String description;
     private Double discountValue;
-    private LocalDateTime expirationDate;
+    private Instant expirationDate;
+    private CouponStatusEnum status;
     private Boolean published;
     private Boolean redeemed;
 
     public CouponResponse() {
     }
 
-    public CouponResponse(UUID id, String code, String description, Double discountValue, LocalDateTime expirationDate, Boolean published, Boolean redeemed) {
+    public CouponResponse(UUID id, String code, String description, Double discountValue, Instant expirationDate, CouponStatusEnum status, Boolean published, Boolean redeemed) {
         this.id = id;
         this.code = code;
         this.description = description;
         this.discountValue = discountValue;
         this.expirationDate = expirationDate;
+        this.status = status;
         this.published = published;
         this.redeemed = redeemed;
     }
@@ -58,12 +63,20 @@ public class CouponResponse {
         this.discountValue = discountValue;
     }
 
-    public LocalDateTime getExpirationDate() {
+    public Instant getExpirationDate() {
         return expirationDate;
     }
 
-    public void setExpirationDate(LocalDateTime expirationDate) {
+    public void setExpirationDate(Instant expirationDate) {
         this.expirationDate = expirationDate;
+    }
+
+    public CouponStatusEnum getStatus() {
+        return status;
+    }
+
+    public void setStatus(CouponStatusEnum status) {
+        this.status = status;
     }
 
     public Boolean getPublished() {

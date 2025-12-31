@@ -1,7 +1,9 @@
 package com.example.demo.entities;
 
+import com.example.demo.enums.CouponStatusEnum;
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -15,28 +17,29 @@ public class CouponEntity {
 
     private String code;
 
+    @Column(length = 350)
     private String description;
 
     private Double discountValue;
 
-    private LocalDateTime expirationDate;
-
+    private Instant expirationDate;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CouponStatusEnum status;
     private Boolean published;
     private Boolean redeemed;
 
-    private Boolean deleted = false;
-
     public CouponEntity(){}
 
-    public CouponEntity(UUID id, String code, String description, Double discountValue, LocalDateTime expirationDate, Boolean published, Boolean redeemed, Boolean deleted) {
+    public CouponEntity(UUID id, String code, String description, Double discountValue, Instant expirationDate, CouponStatusEnum status, Boolean published, Boolean redeemed) {
         this.id = id;
         this.code = code;
         this.description = description;
         this.discountValue = discountValue;
         this.expirationDate = expirationDate;
+        this.status = status;
         this.published = published;
         this.redeemed = redeemed;
-        this.deleted = deleted;
     }
 
     public UUID getId() {
@@ -71,12 +74,20 @@ public class CouponEntity {
         this.discountValue = discountValue;
     }
 
-    public LocalDateTime getExpirationDate() {
+    public Instant getExpirationDate() {
         return expirationDate;
     }
 
-    public void setExpirationDate(LocalDateTime expirationDate) {
+    public void setExpirationDate(Instant expirationDate) {
         this.expirationDate = expirationDate;
+    }
+
+    public CouponStatusEnum getStatus() {
+        return status;
+    }
+
+    public void setStatus(CouponStatusEnum status) {
+        this.status = status;
     }
 
     public Boolean getPublished() {
@@ -95,11 +106,4 @@ public class CouponEntity {
         this.redeemed = redeemed;
     }
 
-    public Boolean getDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(Boolean deleted) {
-        this.deleted = deleted;
-    }
 }

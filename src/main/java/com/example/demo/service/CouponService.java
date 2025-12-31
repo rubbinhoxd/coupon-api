@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.CouponDTO;
 import com.example.demo.dto.CouponResponse;
 import com.example.demo.entities.CouponEntity;
+import com.example.demo.enums.CouponStatusEnum;
 import com.example.demo.exceptions.BusinessException;
 import com.example.demo.exceptions.CodeNotFoundException;
 import com.example.demo.exceptions.CouponAlreadyDeletedException;
@@ -10,6 +11,7 @@ import com.example.demo.exceptions.CouponNotFoundException;
 import com.example.demo.repository.CouponRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -24,29 +26,25 @@ public class CouponService {
 
     public CouponResponse create(CouponDTO request) {
 
-        // sanitizar code (remover caracteres especiais) ---
         String sanitizedCode = sanitizeCode(request.getCode());
 
-        // valor mínimo 0.5 ---
         if (request.getDiscountValue() == null || request.getDiscountValue() < 0.5) {
             throw new BusinessException("discountValue must be at least 0.5");
         }
 
-        // expirationDate não pode ser no passado ---
         if (request.getExpirationDate() == null ||
-                request.getExpirationDate().isBefore(LocalDateTime.now())) {
+                request.getExpirationDate().isBefore(Instant.now())) {
             throw new BusinessException("expirationDate cannot be in the past");
         }
 
-        // Cria entidade
         CouponEntity entity = new CouponEntity();
         entity.setCode(sanitizedCode);
         entity.setDescription(request.getDescription());
         entity.setDiscountValue(request.getDiscountValue());
         entity.setExpirationDate(request.getExpirationDate());
         entity.setPublished(Boolean.TRUE.equals(request.getPublished()));
-        entity.setRedeemed(false); // se tiver esse campo
-        entity.setDeleted(false);  // soft delete padrão
+        entity.setStatus(CouponStatusEnum.ACTIVE);
+        entity.setRedeemed(false);
 
         entity = repository.save(entity);
 
@@ -57,8 +55,8 @@ public class CouponService {
         CouponEntity entity = repository.findById(id)
                 .orElseThrow(() -> new CouponNotFoundException("Coupon not found"));
 
-        // Se estiver deletado, trata como não encontrado
-        if (Boolean.TRUE.equals(entity.getDeleted())) {
+
+        if (CouponStatusEnum.DELETED.equals(entity.getStatus())) {
             throw new CouponNotFoundException("Coupon not found");
         }
 
@@ -69,11 +67,11 @@ public class CouponService {
         CouponEntity entity = repository.findById(id)
                 .orElseThrow(() -> new CouponNotFoundException("Coupon not found"));
 
-        if (Boolean.TRUE.equals(entity.getDeleted())) {
+        if (CouponStatusEnum.DELETED.equals(entity.getStatus())) {
             throw new CouponAlreadyDeletedException("Coupon already deleted");
         }
 
-        entity.setDeleted(true);
+        entity.setStatus(CouponStatusEnum.DELETED);
         repository.save(entity);
     }
 
@@ -84,7 +82,7 @@ public class CouponService {
             throw new CodeNotFoundException("code is required");
         }
 
-        // remove tudo que não for [A-Za-z0-9]
+
         String sanitized = rawCode.replaceAll("[^A-Za-z0-9]", "");
 
 
@@ -106,6 +104,7 @@ public class CouponService {
         resp.setDescription(entity.getDescription());
         resp.setDiscountValue(entity.getDiscountValue());
         resp.setExpirationDate(entity.getExpirationDate());
+        resp.setStatus(entity.getStatus());
         resp.setPublished(entity.getPublished());
         resp.setRedeemed(entity.getRedeemed());
 

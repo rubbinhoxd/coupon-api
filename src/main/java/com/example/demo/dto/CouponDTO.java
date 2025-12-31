@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public class CouponDTO {
@@ -17,13 +18,12 @@ public class CouponDTO {
     private String description;
 
     @NotNull
-    @Min(0) // vamos validar valor mínimo via regra de negócio
+    @Min(0)
     private Double discountValue;
 
     @NotNull
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     @FutureOrPresent
-    private LocalDateTime expirationDate;
+    private Instant expirationDate;
 
     private Boolean published;
 
@@ -31,7 +31,7 @@ public class CouponDTO {
 
     }
 
-    public CouponDTO(String code, String description, Double discountValue, LocalDateTime expirationDate, Boolean published) {
+    public CouponDTO(String code, String description, Double discountValue, Instant expirationDate, Boolean published) {
         this.code = code;
         this.description = description;
         this.discountValue = discountValue;
@@ -63,11 +63,11 @@ public class CouponDTO {
         this.description = description;
     }
 
-    public LocalDateTime getExpirationDate() {
+    public Instant getExpirationDate() {
         return expirationDate;
     }
 
-    public void setExpirationDate(LocalDateTime expirationDate) {
+    public void setExpirationDate(Instant expirationDate) {
         this.expirationDate = expirationDate;
     }
 
