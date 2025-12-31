@@ -193,6 +193,34 @@ Testado com `@WebMvcTest`:
 - **DELETE** cupom inexistente → **404 Not Found**
 - **DELETE** cupom já removido → **409 Conflict**
 
+---
+
+### Teste de Integração
+
+O projeto possui ao menos um **teste de integração real**, garantindo o funcionamento completo da aplicação desde a camada HTTP até a persistência em banco de dados.
+
+Esse teste utiliza:
+
+- `@SpringBootTest`
+- `@AutoConfigureMockMvc`
+- Banco em memória **H2**
+
+O teste valida o fluxo completo:
+
+1. **Criação do cupom** via endpoint `POST /coupon`
+2. **Consulta do cupom** via `GET /coupon/{id}`
+3. **Soft delete do cupom** via `DELETE /coupon/{id}`
+4. Validação de que cupons com status `DELETED` não são retornados
+
+Durante o teste, o Spring Boot inicializa um contexto isolado de aplicação, incluindo controllers, services, repositories e banco de dados em memória, sem necessidade de subir a aplicação manualmente.
+
+Esse teste garante que:
+- O contrato da API é respeitado
+- As regras de negócio funcionam corretamente
+- A integração entre camadas está consistente
+
+
+
 ### Como rodar os testes
 
 ```bash
