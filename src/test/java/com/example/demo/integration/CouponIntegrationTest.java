@@ -27,7 +27,7 @@ class CouponIntegrationTest {
 
     @Test
     void shouldCreateThenFindThenSoftDelete_couponFlow() throws Exception {
-        // 1) CREATE (201)
+
         String createBody = """
         {
           "code": "ABC-123",
@@ -55,7 +55,7 @@ class CouponIntegrationTest {
         String id = node.get("id").asText();
         assertThat(id).isNotBlank();
 
-        // 2) FIND (200)
+
         mockMvc.perform(get("/coupon/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -63,15 +63,15 @@ class CouponIntegrationTest {
                 .andExpect(jsonPath("$.code").value("ABC123"))
                 .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-        // 3) SOFT DELETE (204)
+
         mockMvc.perform(delete("/coupon/{id}", id))
                 .andExpect(status().isNoContent());
 
-        // 4) DELETE AGAIN -> 409 (regra de negócio)
+
         mockMvc.perform(delete("/coupon/{id}", id))
                 .andExpect(status().isConflict());
 
-        // 5) FIND AFTER DELETE -> 404 (você trata DELETED como not found)
+
         mockMvc.perform(get("/coupon/{id}", id))
                 .andExpect(status().isNotFound());
     }
